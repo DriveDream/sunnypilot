@@ -8,7 +8,6 @@ from cereal import custom
 from openpilot.common.params import Params
 from openpilot.common.constants import CV
 from openpilot.common.realtime import DT_MDL
-from openpilot.selfdrive.car.cruise import V_CRUISE_UNSET
 from openpilot.sunnypilot import PARAMS_UPDATE_PERIOD
 from openpilot.selfdrive.controls.lib.drive_helpers import CONTROL_N
 from openpilot.sunnypilot.selfdrive.selfdrived.events import EventsSP
@@ -30,6 +29,8 @@ LIMIT_MIN_ACC = -1.5  # m/s^2 Maximum deceleration allowed for limit controllers
 LIMIT_MAX_ACC = 1.0   # m/s^2 Maximum acceleration allowed for limit controllers to provide while active.
 LIMIT_MIN_SPEED = 8.33  # m/s, Minimum speed limit to provide as solution on limit controllers.
 LIMIT_SPEED_OFFSET_TH = -1.  # m/s Maximum offset between speed limit and current speed for adapting state.
+
+V_CRUISE_UNSET = 255
 
 
 class SpeedLimitAssist:
