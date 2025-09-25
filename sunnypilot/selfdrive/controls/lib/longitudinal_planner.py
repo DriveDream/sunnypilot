@@ -46,7 +46,8 @@ class LongitudinalPlannerSP:
     return self.dec.mode()
 
   def update_targets(self, sm: messaging.SubMaster, v_ego: float, a_ego: float, v_cruise: float) -> tuple[float, float]:
-    v_cruise_cluster_kph = min(sm['carState'].vCruiseCluster, V_CRUISE_MAX)
+    CS = sm['carState']
+    v_cruise_cluster_kph = min(CS.vCruiseCluster, V_CRUISE_MAX)
     v_cruise_cluster = v_cruise_cluster_kph * CV.KPH_TO_MS
 
     long_enabled = sm['carControl'].enabled
@@ -61,8 +62,9 @@ class LongitudinalPlannerSP:
     self.resolver.update(v_ego, sm)
 
     # Speed Limit Assist
-    self.sla.update(long_enabled, long_override, v_ego, a_ego, v_cruise_cluster,
-                    self.resolver.speed_limit, self.resolver.speed_limit_offset, self.resolver.distance, self.events_sp)
+    has_speed_limit = self.resolver.speed_limit_valid or self.resolver.speed_limit_last_valid
+    self.sla.update(long_enabled, long_override, v_ego, a_ego, v_cruise_cluster, self.resolver.speed_limit,
+                    self.resolver.speed_limit_final_last, has_speed_limit, self.resolver.distance, self.events_sp, CS)
 
     targets = {
       LongitudinalPlanSource.cruise: (v_cruise, a_ego),
@@ -118,6 +120,11 @@ class LongitudinalPlannerSP:
     speedLimit = longitudinalPlanSP.speedLimit
     resolver = speedLimit.resolver
     resolver.speedLimit = float(self.resolver.speed_limit)
+    resolver.speedLimitLast = float(self.resolver.speed_limit_last)
+    resolver.speedLimitFinal = float(self.resolver.speed_limit_final)
+    resolver.speedLimitFinalLast = float(self.resolver.speed_limit_final_last)
+    resolver.speedLimitValid = self.resolver.speed_limit_valid
+    resolver.speedLimitLastValid = self.resolver.speed_limit_last_valid
     resolver.speedLimitOffset = float(self.resolver.speed_limit_offset)
     resolver.distToSpeedLimit = float(self.resolver.distance)
     resolver.source = self.resolver.source
