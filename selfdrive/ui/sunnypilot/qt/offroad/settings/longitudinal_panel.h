@@ -42,6 +42,7 @@ private:
   ParamControlSP *vibePersonalityControl;
   ParamControlSP *vibeAccelPersonalityControl;
   ParamControlSP *vibeFollowPersonalityControl;
+  ParamControl *SmartCruiseControlMap;
   ParamControl *intelligentCruiseButtonManagement = nullptr;
   SpeedLimitSettings *speedLimitScreen;
   PushButtonSP *speedLimitSettings;
