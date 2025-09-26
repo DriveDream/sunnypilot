@@ -41,7 +41,7 @@ class SpeedLimitAssist:
     self.params = Params()
     self.CP = CP
     self.frame = -1
-    self.long_engaged_timer = 0
+    self.hold_timer = 0
     self.pre_active_timer = 0
     self.is_metric = self.params.get_bool("IsMetric")
     self.enabled = self.params.get("SpeedLimitMode", return_default=True) == Mode.assist
@@ -170,7 +170,7 @@ class SpeedLimitAssist:
     return False
 
   def update_state_machine_pcm_op_long(self):
-    self.long_engaged_timer = max(0, self.long_engaged_timer - 1)
+    self.hold_timer = max(0, self.hold_timer - 1)
     self.pre_active_timer = max(0, self.pre_active_timer - 1)
 
     # ACTIVE, ADAPTING, PENDING, PRE_ACTIVE, INACTIVE
@@ -222,9 +222,9 @@ class SpeedLimitAssist:
       if self.long_enabled and self.enabled:
         # start or reset preActive timer if initially enabled or manual set speed change detected
         if not self.long_enabled_prev or self.v_cruise_cluster_changed:
-          self.long_engaged_timer = int(DISABLED_GUARD_PERIOD / DT_MDL)
+          self.hold_timer = int(DISABLED_GUARD_PERIOD / DT_MDL)
 
-        elif self.long_engaged_timer <= 0:
+        elif self.hold_timer <= 0:
           if self.target_set_speed_confirmed:
             self._update_confirmed_state()
           else:
@@ -237,7 +237,7 @@ class SpeedLimitAssist:
     return enabled, active
 
   def update_state_machine_non_pcm_long(self):
-    self.long_engaged_timer = max(0, self.long_engaged_timer - 1)
+    self.hold_timer = max(0, self.hold_timer - 1)
     self.pre_active_timer = max(0, self.pre_active_timer - 1)
 
     # ACTIVE, ADAPTING, PENDING, PRE_ACTIVE, INACTIVE
@@ -249,6 +249,7 @@ class SpeedLimitAssist:
         # ACTIVE
         if self.state == SpeedLimitAssistState.active:
           if self.v_cruise_cluster_changed:
+            self.hold_timer = int(DISABLED_GUARD_PERIOD / DT_MDL)
             self.state = SpeedLimitAssistState.inactive
 
           elif self.speed_limit_changed and self.apply_confirm_speed_threshold():
@@ -256,7 +257,9 @@ class SpeedLimitAssist:
 
         # PRE_ACTIVE
         elif self.state == SpeedLimitAssistState.preActive:
-          if self._update_non_pcm_long_confirmed_state():
+          if self.hold_timer > 0:
+            pass
+          elif self._update_non_pcm_long_confirmed_state():
             self.state = SpeedLimitAssistState.active
           elif self.pre_active_timer <= PRE_ACTIVE_GUARD_PERIOD:
             # Timeout - session ended
@@ -267,6 +270,8 @@ class SpeedLimitAssist:
           if self.speed_limit_changed:
             self.state = SpeedLimitAssistState.preActive
             self.pre_active_timer = int(PRE_ACTIVE_GUARD_PERIOD / DT_MDL)
+          elif self.hold_timer > 0:
+            pass
           elif self._update_non_pcm_long_confirmed_state():
             self.state = SpeedLimitAssistState.active
 
@@ -275,9 +280,9 @@ class SpeedLimitAssist:
       if self.long_enabled and self.enabled:
         # start or reset preActive timer if initially enabled or manual set speed change detected
         if not self.long_enabled_prev or self.v_cruise_cluster_changed:
-          self.long_engaged_timer = int(DISABLED_GUARD_PERIOD / DT_MDL)
+          self.hold_timer = int(DISABLED_GUARD_PERIOD / DT_MDL)
 
-        elif self.long_engaged_timer <= 0:
+        elif self.hold_timer <= 0:
           if self._update_non_pcm_long_confirmed_state():
             self.state = SpeedLimitAssistState.active
           else:
