@@ -97,15 +97,18 @@ class SpeedLimitAssist:
 
   @property
   def v_cruise_cluster_changed(self) -> bool:
-    return bool(self.v_cruise_cluster != self.v_cruise_cluster_prev)
+    return bool(self.v_cruise_cluster_conv != self.prev_v_cruise_cluster_conv)
 
   @property
   def target_set_speed_confirmed(self) -> bool:
     return bool(self.v_cruise_cluster_conv == self.target_set_speed_conv)
 
   def get_v_target_from_control(self) -> float:
-    if self.is_enabled and self._has_speed_limit:
-      return self._speed_limit_final_last
+    if self._has_speed_limit:
+      if self.pcm_op_long and self.is_enabled:
+        return self._speed_limit_final_last
+      if not self.pcm_op_long and self.is_active:
+        return self._speed_limit_final_last
 
     # Fallback
     return V_CRUISE_UNSET
@@ -162,6 +165,7 @@ class SpeedLimitAssist:
 
     self.target_set_speed_conv = pcm_long_required_max_set_speed_conv if self.pcm_op_long else self.speed_limit_final_last_conv
 
+  @property
   def apply_confirm_speed_threshold(self) -> bool:
     # below CST: always require user confirmation
     if self.v_cruise_cluster_conv < CONFIRM_SPEED_THRESHOLD[self.is_metric]:
@@ -194,7 +198,7 @@ class SpeedLimitAssist:
       self.state = SpeedLimitAssistState.pending
 
   def _update_non_pcm_long_confirmed_state(self) -> bool:
-    if self.target_set_speed_confirmed and self.state != SpeedLimitAssistState.inactive:
+    if self.target_set_speed_confirmed:
       return True
 
     if self.state != SpeedLimitAssistState.preActive:
@@ -218,7 +222,7 @@ class SpeedLimitAssist:
         if self.state == SpeedLimitAssistState.active:
           if self.v_cruise_cluster_changed:
             self.state = SpeedLimitAssistState.inactive
-          elif self.speed_limit_changed and self.apply_confirm_speed_threshold():
+          elif self.speed_limit_changed and self.apply_confirm_speed_threshold:
             self.state = SpeedLimitAssistState.preActive
           elif self._has_speed_limit and self.v_offset < LIMIT_SPEED_OFFSET_TH:
             self.state = SpeedLimitAssistState.adapting
@@ -227,7 +231,7 @@ class SpeedLimitAssist:
         elif self.state == SpeedLimitAssistState.adapting:
           if self.v_cruise_cluster_changed:
             self.state = SpeedLimitAssistState.inactive
-          elif self.speed_limit_changed and self.apply_confirm_speed_threshold():
+          elif self.speed_limit_changed and self.apply_confirm_speed_threshold:
             self.state = SpeedLimitAssistState.preActive
           elif self.v_offset >= LIMIT_SPEED_OFFSET_TH:
             self.state = SpeedLimitAssistState.active
@@ -286,7 +290,7 @@ class SpeedLimitAssist:
           if self.v_cruise_cluster_changed:
             self.state = SpeedLimitAssistState.inactive
 
-          elif self.speed_limit_changed and self.apply_confirm_speed_threshold():
+          elif self.speed_limit_changed and self.apply_confirm_speed_threshold:
             self.state = SpeedLimitAssistState.preActive
 
         # PRE_ACTIVE
