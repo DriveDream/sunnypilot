@@ -46,7 +46,8 @@ class LongitudinalPlannerSP:
     return self.dec.mode()
 
   def update_targets(self, sm: messaging.SubMaster, v_ego: float, a_ego: float, v_cruise: float) -> tuple[float, float]:
-    v_cruise_cluster_kph = min(sm['carState'].vCruiseCluster, V_CRUISE_MAX)
+    CS = sm['carState']
+    v_cruise_cluster_kph = min(CS.vCruiseCluster, V_CRUISE_MAX)
     v_cruise_cluster = v_cruise_cluster_kph * CV.KPH_TO_MS
 
     long_enabled = sm['carControl'].enabled
