@@ -75,6 +75,7 @@ void HudRendererSP::updateState(const UIState &s) {
   }
 
   reversing = reverse_allowed;
+  if (not wasMoving) wasMoving = car_state.getVEgo() > 0.1;
 
   latActive = car_control.getLatActive();
   steerOverride = car_state.getSteeringPressed();
@@ -386,7 +387,7 @@ void HudRendererSP::drawBottomDevUI(QPainter &p, int x, int y) {
 }
 
 void HudRendererSP::drawStandstillTimer(QPainter &p, int x, int y) {
-  if (isStandstill) {
+  if (isStandstill and wasMoving) {
     standstillElapsedTime += 1.0 / UI_FREQ;
 
     int minute = static_cast<int>(standstillElapsedTime / 60);
