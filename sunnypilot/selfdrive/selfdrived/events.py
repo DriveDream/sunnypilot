@@ -52,10 +52,10 @@ def speed_limit_pre_active_alert(CP: car.CarParams, CS: car.CarState, sm: messag
     elif req_minus:
       arrow_str = "SET/-"
 
-    alert_2_str = f"Operate the {arrow_str} cruise control button to activate"
+    alert_2_str = f"Operate the {arrow_str} cruise control button to activate. Or don't. It's up to you, you know."
 
   return Alert(
-    "Speed Limit Assist: Activation Required",
+    "Speed Limit Ass: Activation Required, YES VERY MUCH REQUIRED",
     alert_2_str,
     AlertStatus.normal, AlertSize.mid,
     Priority.LOW, VisualAlert.none, AudibleAlert.none, .1)
